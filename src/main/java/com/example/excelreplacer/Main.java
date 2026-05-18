@@ -81,7 +81,7 @@ public class Main {
             throw new IllegalArgumentException("No Excel files found in directory: " + cliArgs.excelPath());
         }
 
-        System.out.println("Found " + excelFiles.length + " Excel file(s) to process...\n");
+        System.out.println("Found " + excelFiles.length + " Excel file(s) in directory: " + cliArgs.excelPath());
 
         List<ReplaceRule> rules = ConfigLoader.load(cliArgs.configPath());
         String textContent = Files.readString(Path.of(cliArgs.textPath()));

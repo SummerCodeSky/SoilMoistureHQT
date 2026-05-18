@@ -141,10 +141,10 @@ java -jar target/soil-moisture-hqt-1.0.0.jar \
 ### 批量处理（推荐）
 
 ```bash
-# 处理当前目录所有 Excel 文件，输出到 output 目录，并合并为 merged.HQT
+# 从 input/ 目录读取所有 Excel 文件，输出到 output/ 目录，并合并为 merged.HQT
 java -jar target/soil-moisture-hqt-1.0.0.jar \
   -b \
-  -e . \
+  -e input \
   -t template.txt \
   -c config.json \
   -o output \
@@ -153,8 +153,8 @@ java -jar target/soil-moisture-hqt-1.0.0.jar \
 ```
 
 输出：
-- `output/file1.HQT` - 第一个 Excel 文件的输出
-- `output/file2.HQT` - 第二个 Excel 文件的输出
+- `output/file1.HQT` - 对应 `input/file1.xlsx`
+- `output/file2.HQT` - 对应 `input/file2.xlsx`
 - `merged.HQT` - 所有输出合并（空行分隔）
 
 ## 开发流程
