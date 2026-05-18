@@ -9,23 +9,22 @@ SoilMoistureHQT/
 ├── pom.xml                          # Maven 配置文件
 ├── README.md                        # 项目说明
 ├── .gitignore                       # Git 忽略配置
-├── deploy.bat                       # Windows 一键部署脚本
-├── init.bat                         # Windows 初始化脚本
-├── run.bat                          # Windows 批量处理脚本
+├── setup.bat                        # Windows 初始化脚本
+├── run.bat                          # Windows 运行脚本
+├── run.sh                           # Linux/Mac 运行脚本
 ├── template.txt                     # 文本模板
 ├── config.json                      # 替换规则配置
+├── soil-moisture-hqt-1.0.0.jar      # 程序 jar 包
 ├── src/
-│   ├── main/
-│   │   ├── java/
-│   │   │   └── com/example/excelreplacer/
-│   │   │       └── ...              # Java 源代码
-│   │   └── resources/
-│   │       ├── data.xlsx            # Excel 数据文件（示例）
-│   │       ├── template.txt         # 文本模板（示例）
-│   │       ├── config.json          # 配置文件（示例）
-│   │       └── log4j2.xml           # 日志配置
-│   └── test/
-│       └── ...                      # 测试代码和资源
+│   └── main/
+│       ├── java/
+│       │   └── com/example/excelreplacer/
+│       │       └── ...              # Java 源代码
+│       └── resources/
+│           ├── data.xlsx            # Excel 数据文件（示例）
+│           ├── template.txt         # 文本模板（示例）
+│           ├── config.json          # 配置文件（示例）
+│           └── log4j2.xml           # 日志配置
 ├── input/                           # 【放置 Excel 文件】
 │   ├── 数据 1.xlsx
 │   └── 数据 2.xlsx
@@ -35,19 +34,58 @@ SoilMoistureHQT/
 └── merged.HQT                       # 【合并文件】所有输出合并
 ```
 
-## 快速开始（Windows）
+## 快速使用
 
-### 1. 首次部署
+### Windows 用户
 
-双击 `deploy.bat` 或在命令行执行：
+#### 1. 初始化（首次使用）
 
 ```batch
-deploy.bat
+setup.bat
 ```
 
-完成：
-- ✅ 检查 Java 环境（需要 JDK 17+）
-- ✅ 编译项目
+自动创建：
+- `input/` 目录
+- `output/` 目录
+- `template.txt`
+- `config.json`
+
+#### 2. 放入 Excel 文件
+
+将 Excel 文件放入 `input/` 目录
+
+#### 3. 运行处理
+
+```batch
+run.bat
+```
+
+### Linux/Mac 用户
+
+```bash
+# 初始化
+mkdir input output
+cp src/main/resources/template.txt .
+cp src/main/resources/config.json .
+
+# 放入 Excel 文件到 input/
+
+# 运行
+./run.sh
+```
+
+### 命令行方式（跨平台）
+
+```bash
+java -jar soil-moisture-hqt-1.0.0.jar \
+  -b \
+  -e input \
+  -t template.txt \
+  -c config.json \
+  -o output \
+  -m merged.HQT \
+  --sheet-index 2
+```
 - ✅ 创建 input/output 目录
 - ✅ 生成 template.txt 和 config.json
 
