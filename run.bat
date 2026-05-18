@@ -1,50 +1,40 @@
 @echo off
-echo ========================================
-echo   Soil Moisture - Batch Processor
-echo ========================================
-echo.
-
-java -version >nul 2>&1
-if %errorlevel% neq 0 (
-    echo ERROR: Java not installed
-    pause
-    exit /b 1
-)
+echo Checking files...
 
 if not exist input (
-    echo ERROR: input folder not found. Run deploy.bat first
+    echo ERROR: input folder not found
+    echo Please create input folder and put Excel files in it
     pause
     exit /b 1
 )
 
 if not exist template.txt (
-    echo ERROR: template.txt not found. Run deploy.bat first
+    echo ERROR: template.txt not found
     pause
     exit /b 1
 )
 
 if not exist config.json (
-    echo ERROR: config.json not found. Run deploy.bat first
+    echo ERROR: config.json not found
     pause
     exit /b 1
 )
 
-if not exist target\soil-moisture-hqt-1.0.0.jar (
-    echo ERROR: Program not found. Run deploy.bat first
+if not exist soil-moisture-hqt-1.0.0.jar (
+    echo ERROR: soil-moisture-hqt-1.0.0.jar not found
+    echo Please download the jar file
     pause
     exit /b 1
 )
 
-echo Processing Excel files...
+echo Starting batch processing...
 echo.
 
-java -jar target\soil-moisture-hqt-1.0.0.jar -b -e input -t template.txt -c config.json -o output -m merged.HQT --sheet-index 2
+java -jar soil-moisture-hqt-1.0.0.jar -b -e input -t template.txt -c config.json -o output -m merged.HQT --sheet-index 2
 
 echo.
 if %errorlevel% equ 0 (
-    echo ========================================
-    echo   Processing Complete!
-    echo ========================================
+    echo Processing complete!
     explorer output
 )
 
