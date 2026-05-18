@@ -41,3 +41,9 @@ logs/
 # Test output
 Surefire*.txt
 failsafe*.txt
+
+# Input/Output files (keep data separate from code)
+input/
+output/
+merged.HQT
+*.HQT

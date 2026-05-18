@@ -9,82 +9,159 @@ SoilMoistureHQT/
 ├── pom.xml                          # Maven 配置文件
 ├── README.md                        # 项目说明
 ├── .gitignore                       # Git 忽略配置
+├── deploy.bat                       # Windows 一键部署脚本
+├── init.bat                         # Windows 初始化脚本
+├── run.bat                          # Windows 批量处理脚本
+├── template.txt                     # 文本模板
+├── config.json                      # 替换规则配置
 ├── src/
 │   ├── main/
 │   │   ├── java/
 │   │   │   └── com/example/excelreplacer/
-│   │   │       ├── Main.java              # 主程序入口
-│   │   │       ├── CliArgs.java           # 命令行参数定义
-│   │   │       ├── CliParser.java         # 命令行参数解析
-│   │   │       ├── ConfigLoader.java      # JSON 配置加载
-│   │   │       ├── ExcelReader.java       # Excel 文件读取
-│   │   │       ├── FileWriter.java        # 文件写入
-│   │   │       ├── TextReplacer.java      # 文本替换核心
-│   │   │       ├── ReplaceRule.java       # 替换规则定义
-│   │   │       ├── ReplaceDetail.java     # 替换详情
-│   │   │       └── ReplaceReport.java     # 替换报告
+│   │   │       └── ...              # Java 源代码
 │   │   └── resources/
-│   │       ├── data.xlsx                # Excel 数据文件（示例）
-│   │       ├── template.txt             # 文本模板（示例）
-│   │       ├── config.json              # 配置文件（示例）
-│   │       └── log4j2.xml               # 日志配置
+│   │       ├── data.xlsx            # Excel 数据文件（示例）
+│   │       ├── template.txt         # 文本模板（示例）
+│   │       ├── config.json          # 配置文件（示例）
+│   │       └── log4j2.xml           # 日志配置
 │   └── test/
-│       ├── java/                        # 测试代码
-│       └── resources/                   # 测试资源
-└── target/
-    └── soil-moisture-hqt-1.0.0.jar      # 编译产物
+│       └── ...                      # 测试代码和资源
+├── input/                           # 【放置 Excel 文件】
+│   ├── 数据 1.xlsx
+│   └── 数据 2.xlsx
+├── output/                          # 【输出目录】
+│   ├── 数据 1.HQT
+│   └── 数据 2.HQT
+└── merged.HQT                       # 【合并文件】所有输出合并
 ```
 
-## 编译项目
+## 快速开始（Windows）
 
-### 前置要求
-- JDK 17+
-- Maven 3.6+
+### 1. 首次部署
 
-### 编译命令
+双击 `deploy.bat` 或在命令行执行：
 
-```bash
-cd /workspace/SoilMoistureHQT
-mvn clean package
+```batch
+deploy.bat
 ```
 
-编译产物：
+完成：
+- ✅ 检查 Java 环境（需要 JDK 17+）
+- ✅ 编译项目
+- ✅ 创建 input/output 目录
+- ✅ 生成 template.txt 和 config.json
+
+### 2. 准备 Excel 文件
+
+将 Excel 文件放入 `input/` 目录：
+
 ```
-target/soil-moisture-hqt-1.0.0.jar  # 包含所有依赖的 uber jar (约 18MB)
+input/
+├── 安康 2026.4.20 墒情.xlsx
+├── 安康 2026.4.30 墒情.xlsx
+└── 安康 2026.5.10 墒情.xlsx
+```
+
+### 3. 运行处理
+
+双击 `run.bat` 执行批量处理：
+
+```batch
+run.bat
+```
+
+### 4. 查看结果
+
+处理完成后自动打开 `output/` 目录：
+
+```
+output/
+├── 安康 2026.4.20 墒情.HQT
+├── 安康 2026.4.30 墒情.HQT
+└── 安康 2026.5.10 墒情.HQT
+
+merged.HQT              # 合并文件（所有数据，空行分隔）
+```
+
+---
+
+## 环境要求
+
+- **JDK 17+**: https://adoptium.net/temurin/releases/?version=17
+- **Maven 3.6+**: https://maven.apache.org/download.cgi（或使用项目自带 Maven Wrapper）
+
+### 检查环境
+
+```batch
+# 检查 Java
+java -version
+
+# 检查 Maven
+mvn -version
 ```
 
 ## 运行方式
 
-### 方式 1：单个 Excel 文件处理
+### Windows 用户（推荐）
+
+#### 方式 1：一键部署（首次使用）
+
+双击 `deploy.bat` 或在命令行执行：
+
+```batch
+deploy.bat
+```
+
+自动完成：
+- 检查 Java/Maven 环境
+- 编译项目
+- 创建必要目录和配置文件
+
+#### 方式 2：运行批量处理
+
+将 Excel 文件放入 `input/` 目录后，双击 `run.bat` 或执行：
+
+```batch
+run.bat
+```
+
+自动完成：
+- 检查环境和必要文件
+- 批量处理所有 Excel 文件
+- 生成独立 HQT 文件和合并文件
+- 自动打开 output 目录
+
+### 命令行方式（跨平台）
+
+#### 单个 Excel 文件处理
 
 ```bash
 java -jar target/soil-moisture-hqt-1.0.0.jar \
-  --excel data.xlsx \
-  --text template.txt \
-  --config config.json \
+  -e data.xlsx \
+  -t template.txt \
+  -c config.json \
   --sheet-index 2
 ```
 
-### 方式 2：批量处理多个 Excel 文件
-
-处理当前目录下所有 Excel 文件，每个文件生成独立的 `.HQT` 文件，并合并为一个总文件：
+#### 批量处理多个 Excel 文件
 
 ```bash
+# 从 input/ 读取所有 Excel，输出到 output/，合并为 merged.HQT
 java -jar target/soil-moisture-hqt-1.0.0.jar \
-  --batch \
-  --excel . \
-  --text template.txt \
-  --config config.json \
-  --output output \
-  --merge-output merged.HQT \
+  -b \
+  -e input \
+  -t template.txt \
+  -c config.json \
+  -o output \
+  -m merged.HQT \
   --sheet-index 2
 ```
 
 **批量模式说明：**
 - 自动扫描指定目录下的所有 `.xlsx` 和 `.xls` 文件
 - 每个 Excel 文件生成独立的 `.HQT` 文件（文件名与 Excel 文件名一致）
-- 输出目录由 `--output` 指定（可选，默认为 `output`）
-- `--merge-output` 可选，将所有输出合并为一个文件，文件之间用空行分隔
+- 输出目录由 `-o` 指定（可选，默认为 `output`）
+- `-m` 可选，将所有输出合并为一个文件，文件之间用空行分隔
 
 ## 命令行参数
 
