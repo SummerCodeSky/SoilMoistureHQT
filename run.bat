@@ -1,0 +1,91 @@
+@echo off
+chcp 65001 >nul
+echo ========================================
+echo   土壤墒情批量处理工具
+echo ========================================
+echo.
+
+REM 检查 Java 是否安装
+java -version >nul 2>&1
+if %errorlevel% neq 0 (
+    echo [错误] 未检测到 Java 环境，请先安装 JDK 17+
+    echo 下载地址：https://adoptium.net/
+    pause
+    exit /b 1
+)
+
+REM 检查必要文件
+if not exist "input" (
+    echo [错误] 找不到 input 目录，请将 Excel 文件放入 input 目录
+    pause
+    exit /b 1
+)
+
+if not exist "template.txt" (
+    echo [错误] 找不到 template.txt 文件
+    pause
+    exit /b 1
+)
+
+if not exist "config.json" (
+    echo [错误] 找不到 config.json 文件
+    pause
+    exit /b 1
+)
+
+if not exist "target\soil-moisture-hqt-1.0.0.jar" (
+    echo [错误] 找不到程序文件 target\soil-moisture-hqt-1.0.0.jar
+    echo 请先运行：mvn clean package
+    pause
+    exit /b 1
+)
+
+REM 统计 Excel 文件数量
+set /a excelCount=0
+for %%f in (input\*.xlsx) do set /a excelCount+=1
+for %%f in (input\*.xls) do set /a excelCount+=1
+
+if %excelCount% equ 0 (
+    echo [错误] input 目录下没有找到 Excel 文件
+    pause
+    exit /b 1
+)
+
+echo [信息] 找到 %excelCount% 个 Excel 文件
+echo.
+echo [处理中] 请稍候...
+echo.
+
+REM 执行批量处理
+java -jar target\soil-moisture-hqt-1.0.0.jar ^
+  -b ^
+  -e input ^
+  -t template.txt ^
+  -c config.json ^
+  -o output ^
+  -m merged.HQT ^
+  --sheet-index 2
+
+if %errorlevel% equ 0 (
+    echo.
+    echo ========================================
+    echo   处理完成!
+    echo ========================================
+    echo.
+    echo 输出文件位置:
+    echo   - 独立文件：output\*.HQT
+    echo   - 合并文件：merged.HQT
+    echo.
+    
+    REM 打开输出目录
+    if exist "output" (
+        explorer output
+    )
+) else (
+    echo.
+    echo ========================================
+    echo   处理失败，请检查错误信息
+    echo ========================================
+)
+
+pause
