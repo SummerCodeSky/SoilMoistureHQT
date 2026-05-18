@@ -1,330 +1,199 @@
-# 土壤墒情录入项目 (Soil Moisture HQT)
+# 土壤墒情批量处理工具
 
-从 jar 包反编译恢复的 Java 项目，用于 Excel 数据文本替换。
+Windows 环境下的 Excel 批量处理工具，自动从 Excel 读取数据并生成 HQT 文件。
 
-## 项目结构
+---
 
-```
-SoilMoistureHQT/
-├── pom.xml                          # Maven 配置文件
-├── README.md                        # 项目说明
-├── .gitignore                       # Git 忽略配置
-├── setup.bat                        # Windows 初始化脚本
-├── run.bat                          # Windows 运行脚本
-├── run.sh                           # Linux/Mac 运行脚本
-├── template.txt                     # 文本模板
-├── config.json                      # 替换规则配置
-├── soil-moisture-hqt-1.0.0.jar      # 程序 jar 包
-├── src/
-│   └── main/
-│       ├── java/
-│       │   └── com/example/excelreplacer/
-│       │       └── ...              # Java 源代码
-│       └── resources/
-│           ├── data.xlsx            # Excel 数据文件（示例）
-│           ├── template.txt         # 文本模板（示例）
-│           ├── config.json          # 配置文件（示例）
-│           └── log4j2.xml           # 日志配置
-├── input/                           # 【放置 Excel 文件】
-│   ├── 数据 1.xlsx
-│   └── 数据 2.xlsx
-├── output/                          # 【输出目录】
-│   ├── 数据 1.HQT
-│   └── 数据 2.HQT
-└── merged.HQT                       # 【合并文件】所有输出合并
-```
+## 快速开始
 
-## 快速使用
+### 1. 准备文件
 
-### Windows 用户
+将以下文件放在同一目录：
 
-#### 1. 初始化（首次使用）
+- `run.bat` - 运行脚本
+- `soil-moisture-hqt-1.0.0.jar` - 程序文件
+- `template.txt` - 文本模板
+- `config.json` - 替换规则配置
 
-```batch
-setup.bat
-```
+### 2. 放入 Excel 文件
 
-自动创建：
-- `input/` 目录
-- `output/` 目录
-- `template.txt`
-- `config.json`
-
-#### 2. 放入 Excel 文件
-
-将 Excel 文件放入 `input/` 目录
-
-#### 3. 运行处理
-
-```batch
-run.bat
-```
-
-### Linux/Mac 用户
-
-```bash
-# 初始化
-mkdir input output
-cp src/main/resources/template.txt .
-cp src/main/resources/config.json .
-
-# 放入 Excel 文件到 input/
-
-# 运行
-./run.sh
-```
-
-### 命令行方式（跨平台）
-
-```bash
-java -jar soil-moisture-hqt-1.0.0.jar \
-  -b \
-  -e input \
-  -t template.txt \
-  -c config.json \
-  -o output \
-  -m merged.HQT \
-  --sheet-index 2
-```
-- ✅ 创建 input/output 目录
-- ✅ 生成 template.txt 和 config.json
-
-### 2. 准备 Excel 文件
-
-将 Excel 文件放入 `input/` 目录：
+创建 `input/` 文件夹，放入需要处理的 Excel 文件：
 
 ```
-input/
-├── 安康 2026.4.20 墒情.xlsx
-├── 安康 2026.4.30 墒情.xlsx
-└── 安康 2026.5.10 墒情.xlsx
+工具目录/
+├── run.bat
+├── soil-moisture-hqt-1.0.0.jar
+├── template.txt
+├── config.json
+└── input/
+    ├── 安康 2026.4.20 墒情.xlsx
+    ├── 安康 2026.4.30 墒情.xlsx
+    └── 安康 2026.5.10 墒情.xlsx
 ```
 
 ### 3. 运行处理
 
-双击 `run.bat` 执行批量处理：
+双击 **`run.bat`**
 
-```batch
-run.bat
-```
-
-### 4. 查看结果
-
-处理完成后自动打开 `output/` 目录：
-
-```
-output/
-├── 安康 2026.4.20 墒情.HQT
-├── 安康 2026.4.30 墒情.HQT
-└── 安康 2026.5.10 墒情.HQT
-
-merged.HQT              # 合并文件（所有数据，空行分隔）
-```
+处理完成后自动生成：
+- `output/` - 独立的 HQT 文件（每个 Excel 对应一个）
+- `merged.HQT` - 合并所有输出（空行分隔）
 
 ---
 
 ## 环境要求
 
-- **JDK 17+**: https://adoptium.net/temurin/releases/?version=17
-- **Maven 3.6+**: https://maven.apache.org/download.cgi（或使用项目自带 Maven Wrapper）
+- **Windows** 7/10/11
+- **JDK 17+**：https://adoptium.net/temurin/releases/?version=17
 
-### 检查环境
-
+检查 Java 是否安装：
 ```batch
-# 检查 Java
 java -version
-
-# 检查 Maven
-mvn -version
 ```
 
-## 运行方式
+---
 
-### Windows 用户（推荐）
+## 配置文件
 
-#### 方式 1：一键部署（首次使用）
+### template.txt
 
-双击 `deploy.bat` 或在命令行执行：
+文本模板，占位符会被 Excel 数据替换：
 
-```batch
-deploy.bat
+```txt
+618A0900，石泉，1,1,{date},08:00:00,105,,,{station_codes},...
 ```
 
-自动完成：
-- 检查 Java/Maven 环境
-- 编译项目
-- 创建必要目录和配置文件
+### config.json
 
-#### 方式 2：运行批量处理
-
-将 Excel 文件放入 `input/` 目录后，双击 `run.bat` 或执行：
-
-```batch
-run.bat
-```
-
-自动完成：
-- 检查环境和必要文件
-- 批量处理所有 Excel 文件
-- 生成独立 HQT 文件和合并文件
-- 自动打开 output 目录
-
-### 命令行方式（跨平台）
-
-#### 单个 Excel 文件处理
-
-```bash
-java -jar target/soil-moisture-hqt-1.0.0.jar \
-  -e data.xlsx \
-  -t template.txt \
-  -c config.json \
-  --sheet-index 2
-```
-
-#### 批量处理多个 Excel 文件
-
-```bash
-# 从 input/ 读取所有 Excel，输出到 output/，合并为 merged.HQT
-java -jar target/soil-moisture-hqt-1.0.0.jar \
-  -b \
-  -e input \
-  -t template.txt \
-  -c config.json \
-  -o output \
-  -m merged.HQT \
-  --sheet-index 2
-```
-
-**批量模式说明：**
-- 自动扫描指定目录下的所有 `.xlsx` 和 `.xls` 文件
-- 每个 Excel 文件生成独立的 `.HQT` 文件（文件名与 Excel 文件名一致）
-- 输出目录由 `-o` 指定（可选，默认为 `output`）
-- `-m` 可选，将所有输出合并为一个文件，文件之间用空行分隔
-
-## 命令行参数
-
-| 参数 | 说明 | 必需 | 默认值 |
-|------|------|------|--------|
-| `-e, --excel` | Excel 数据文件路径（批量模式为目录） | 是 | - |
-| `-t, --text` | 待替换的文本模板 | 是 | - |
-| `-c, --config` | 替换规则 JSON 配置 | 是 | - |
-| `-o, --output` | 输出文件/目录路径 | 否 | 模板同名 `.hqt` |
-| `-s, --sheet` | 指定 Excel 工作表名称 | 否 | 自动检测 |
-| `--sheet-index` | 指定 Excel 工作表索引（从 0 开始） | 否 | 自动检测 |
-| `-b, --batch` | 批量模式：处理目录下所有 Excel 文件 | 否 | 单文件模式 |
-| `-m, --merge-output` | 批量模式：合并所有输出到单个文件 | 否 | 不合并 |
-
-## 配置格式 (config.json)
+替换规则配置：
 
 ```json
 [
   {
     "row": 2,
     "col": 1,
-    "regexPattern": "^((?:[^,]*,){4})[^,]+",
-    "format": "YYYY-MM-DD"
+    "regexPattern": "^((?:[^,]*,){4})[^,]+"
+  },
+  {
+    "row": 2,
+    "col": 2,
+    "regexPattern": "^((?:[^,]*,){27})[^,]+"
   }
 ]
 ```
 
-### 配置说明
+**参数说明：**
+- `row`: Excel 行号（从 1 开始）
+- `col`: Excel 列号（从 1 开始）
+- `regexPattern`: 正则表达式匹配模式
 
-| 字段 | 说明 | 必需 |
-|------|------|------|
-| `row` | Excel 行号（从 1 开始） | 是 |
-| `col` | Excel 列号（从 1 开始） | 是 |
-| `regexPattern` | 正则表达式匹配模式 | 是 |
-| `sheet` | 工作表名称（可选） | 否 |
-| `format` | 日期格式化（可选） | 否 |
+---
 
-### 支持的格式
+## 输出说明
 
-- `YYYY-MM-DD`：将中文日期格式（如 `2026 年 01 月 13 日`）转换为 `2026-01-13`
+### output/ 目录
 
-## 使用示例
+每个 Excel 文件生成独立的 HQT 文件：
 
-### 单文件处理
-
-```bash
-java -jar target/soil-moisture-hqt-1.0.0.jar \
-  -e data.xlsx \
-  -t template.txt \
-  -c config.json \
-  --sheet-index 2
+```
+output/
+├── 安康 2026.4.20 墒情.HQT
+├── 安康 2026.4.30 墒情.HQT
+└── 安康 2026.5.10 墒情.HQT
 ```
 
-### 批量处理（推荐）
+### merged.HQT
 
-```bash
-# 从 input/ 目录读取所有 Excel 文件，输出到 output/ 目录，并合并为 merged.HQT
-java -jar target/soil-moisture-hqt-1.0.0.jar \
-  -b \
-  -e input \
-  -t template.txt \
-  -c config.json \
-  -o output \
-  -m merged.HQT \
-  --sheet-index 2
+所有输出合并为一个文件，文件之间用空行分隔：
+
+```
+618A0900，石泉，1,1,2026-04-20,...  ← 第一个文件内容
+618 9800，马池，1,1,2026-04-20,...
+
+618A0900，石泉，1,1,2026-04-30,...  ← 空行分隔
+618 9800，马池，1,1,2026-04-30,...
+
+618A0900，石泉，1,1,2026-05-10,...  ← 第三个文件内容
 ```
 
-输出：
-- `output/file1.HQT` - 对应 `input/file1.xlsx`
-- `output/file2.HQT` - 对应 `input/file2.xlsx`
-- `merged.HQT` - 所有输出合并（空行分隔）
-
-## 开发流程
-
-### 修改代码后重新编译
-
-```bash
-mvn clean package
-java -jar target/soil-moisture-hqt-1.0.0.jar -b -e . -t template.txt -c config.json -o output -m merged.HQT --sheet-index 2
-```
-
-### 批量模式工作流程
-
-1. 将所有 Excel 文件放到同一目录
-2. 准备 template.txt 和 config.json
-3. 运行批量处理命令
-4. 检查 output/ 目录下的独立文件
-5. 使用 merged.HQT 查看合并结果
-
-## 技术栈
-
-- **Java**: 17
-- **构建工具**: Maven 3.6+
-- **核心依赖**:
-  - Apache POI 5.2.3 (Excel 处理)
-  - Gson 2.10.1 (JSON 解析)
-  - Log4j2 2.20.0 (日志)
-
-## 反编译说明
-
-本项目是通过 CFR 反编译器从 `SoilMoistureHQT.jar` 恢复的源代码：
-
-```bash
-# 使用 CFR 反编译
-java -jar cfr.jar SoilMoistureHQT.jar --outputdir src
-```
-
-注意事项：
-1. 部分注释已丢失
-2. 变量名可能与原始代码略有差异
-3. 已手动修复部分异常处理代码以适应现代 Java 规范
+---
 
 ## 常见问题
 
-### Q1: 编译时提示找不到主类
-确保 `pom.xml` 中的 `mainClass` 配置正确。
+### Q: 双击 run.bat 后闪退
 
-### Q2: 运行时提示找不到配置文件
-使用绝对路径或确保在正确的目录下运行。
+**原因**：缺少必要文件
 
-### Q3: 替换结果不符合预期
-1. 检查 `config.json` 中的行号、列号是否正确
-2. 确认 Excel 数据与预期一致
-3. 验证正则表达式模式
+**解决**：
+1. 确保 `soil-moisture-hqt-1.0.0.jar` 存在
+2. 确保 `template.txt` 和 `config.json` 存在
+3. 确保 `input/` 目录有 Excel 文件
 
-## 恢复日期
+### Q: 提示找不到 Java
 
-2026-05-18
+**解决**：
+1. 下载 JDK 17+：https://adoptium.net/
+2. 安装后重启命令行
+3. 运行 `java -version` 验证
+
+### Q: 输出结果为空
+
+**检查**：
+1. Excel 文件是否有数据
+2. `config.json` 的行号列号是否正确
+3. 查看 run.bat 运行的错误信息
+
+### Q: 中文乱码
+
+**解决**：
+1. 使用 UTF-8 编码保存 `template.txt` 和 `config.json`
+2. Windows 系统区域设置使用 UTF-8
+
+---
+
+## 命令行参数
+
+如需自定义处理，可使用命令行：
+
+```batch
+java -jar soil-moisture-hqt-1.0.0.jar [参数]
+
+参数:
+  -b, --batch              批量模式
+  -e, --excel <目录>        Excel 文件目录
+  -t, --text <文件>         文本模板文件
+  -c, --config <文件>       配置文件
+  -o, --output <目录>       输出目录
+  -m, --merge-output <文件> 合并输出文件
+  --sheet-index <数字>      Excel 工作表索引（从 0 开始）
+```
+
+示例：
+```batch
+java -jar soil-moisture-hqt-1.0.0.jar -b -e input -t template.txt -c config.json -o output -m merged.HQT --sheet-index 2
+```
+
+---
+
+## 项目结构
+
+```
+SoilMoistureHQT/
+├── run.bat                          # 运行脚本
+├── soil-moisture-hqt-1.0.0.jar      # 程序文件
+├── template.txt                     # 文本模板
+├── config.json                      # 替换规则
+├── input/                           # 放入 Excel 文件
+├── output/                          # 输出目录
+├── merged.HQT                       # 合并文件
+└── src/
+    └── main/
+        ├── java/                    # Java 源代码
+        └── resources/               # 资源文件
+```
+
+---
+
+## 技术支持
+
+如遇问题，请联系开发团队或提交 Issue。
