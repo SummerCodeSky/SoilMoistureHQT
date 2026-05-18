@@ -31,12 +31,8 @@ SoilMoistureHQT/
 │   └── test/
 │       ├── java/                        # 测试代码
 │       └── resources/                   # 测试资源
-├── data.xlsx                        # 数据文件（工作目录）
-├── template.txt                     # 模板文件（工作目录）
-├── config.json                      # 配置文件（工作目录）
-├── run.bat                          # Windows 启动脚本
-├── SoilMoistureHQT.jar              # 原始 jar 包
-└── SoilMoisture.HQT                 # 输出结果
+└── target/
+    └── soil-moisture-hqt-1.0.0.jar      # 编译产物
 ```
 
 ## 编译项目
@@ -59,7 +55,7 @@ target/soil-moisture-hqt-1.0.0.jar  # 包含所有依赖的 uber jar (约 18MB)
 
 ## 运行方式
 
-### 方式 1：使用编译后的 jar（推荐）
+### 方式 1：单个 Excel 文件处理
 
 ```bash
 java -jar target/soil-moisture-hqt-1.0.0.jar \
@@ -69,32 +65,39 @@ java -jar target/soil-moisture-hqt-1.0.0.jar \
   --sheet-index 2
 ```
 
-### 方式 2：使用 Maven 运行
+### 方式 2：批量处理多个 Excel 文件
+
+处理当前目录下所有 Excel 文件，每个文件生成独立的 `.HQT` 文件，并合并为一个总文件：
 
 ```bash
-mvn exec:java
-```
-
-### 方式 3：使用原始 jar
-
-```bash
-java -jar SoilMoistureHQT.jar \
-  --excel data.xlsx \
+java -jar target/soil-moisture-hqt-1.0.0.jar \
+  --batch \
+  --excel . \
   --text template.txt \
   --config config.json \
+  --output output \
+  --merge-output merged.HQT \
   --sheet-index 2
 ```
+
+**批量模式说明：**
+- 自动扫描指定目录下的所有 `.xlsx` 和 `.xls` 文件
+- 每个 Excel 文件生成独立的 `.HQT` 文件（文件名与 Excel 文件名一致）
+- 输出目录由 `--output` 指定（可选，默认为 `output`）
+- `--merge-output` 可选，将所有输出合并为一个文件，文件之间用空行分隔
 
 ## 命令行参数
 
 | 参数 | 说明 | 必需 | 默认值 |
 |------|------|------|--------|
-| `--excel` | Excel 数据文件路径 | 是 | - |
-| `--text` | 待替换的文本模板 | 是 | - |
-| `--config` | 替换规则 JSON 配置 | 是 | - |
-| `--sheet` | 指定 Excel 工作表名称 | 否 | 自动检测 |
+| `-e, --excel` | Excel 数据文件路径（批量模式为目录） | 是 | - |
+| `-t, --text` | 待替换的文本模板 | 是 | - |
+| `-c, --config` | 替换规则 JSON 配置 | 是 | - |
+| `-o, --output` | 输出文件/目录路径 | 否 | 模板同名 `.hqt` |
+| `-s, --sheet` | 指定 Excel 工作表名称 | 否 | 自动检测 |
 | `--sheet-index` | 指定 Excel 工作表索引（从 0 开始） | 否 | 自动检测 |
-| `--output` | 输出文件路径 | 否 | `template.hqt` |
+| `-b, --batch` | 批量模式：处理目录下所有 Excel 文件 | 否 | 单文件模式 |
+| `-m, --merge-output` | 批量模式：合并所有输出到单个文件 | 否 | 不合并 |
 
 ## 配置格式 (config.json)
 
@@ -123,9 +126,36 @@ java -jar SoilMoistureHQT.jar \
 
 - `YYYY-MM-DD`：将中文日期格式（如 `2026 年 01 月 13 日`）转换为 `2026-01-13`
 
-## 输出
+## 使用示例
 
-程序生成 `template.hqt` 文件（或 `--output` 指定的文件），包含替换后的最终结果。
+### 单文件处理
+
+```bash
+java -jar target/soil-moisture-hqt-1.0.0.jar \
+  -e data.xlsx \
+  -t template.txt \
+  -c config.json \
+  --sheet-index 2
+```
+
+### 批量处理（推荐）
+
+```bash
+# 处理当前目录所有 Excel 文件，输出到 output 目录，并合并为 merged.HQT
+java -jar target/soil-moisture-hqt-1.0.0.jar \
+  -b \
+  -e . \
+  -t template.txt \
+  -c config.json \
+  -o output \
+  -m merged.HQT \
+  --sheet-index 2
+```
+
+输出：
+- `output/file1.HQT` - 第一个 Excel 文件的输出
+- `output/file2.HQT` - 第二个 Excel 文件的输出
+- `merged.HQT` - 所有输出合并（空行分隔）
 
 ## 开发流程
 
@@ -133,12 +163,16 @@ java -jar SoilMoistureHQT.jar \
 
 ```bash
 mvn clean package
-java -jar target/soil-moisture-hqt-1.0.0.jar --excel data.xlsx --text template.txt --config config.json --sheet-index 2
+java -jar target/soil-moisture-hqt-1.0.0.jar -b -e . -t template.txt -c config.json -o output -m merged.HQT --sheet-index 2
 ```
 
-### 添加日志
+### 批量模式工作流程
 
-编辑 `src/main/resources/log4j2.xml` 调整日志级别。
+1. 将所有 Excel 文件放到同一目录
+2. 准备 template.txt 和 config.json
+3. 运行批量处理命令
+4. 检查 output/ 目录下的独立文件
+5. 使用 merged.HQT 查看合并结果
 
 ## 技术栈
 
