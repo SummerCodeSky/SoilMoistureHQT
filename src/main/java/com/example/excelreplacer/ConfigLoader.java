@@ -1,25 +1,30 @@
 package com.example.excelreplacer;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.lang.reflect.Type;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 public class ConfigLoader {
     public static List<ReplaceRule> load(String configPath) {
         Gson gson = new Gson();
-        Type listType = new TypeToken<List<ReplaceRule>>(){}.getType();
+        Type listType = new TypeToken<List<JsonObject>>(){}.getType();
         try (FileReader reader = new FileReader(configPath)) {
-            List<ReplaceRule> rules = (List)gson.fromJson((Reader)reader, listType);
-            if (rules == null) {
+            List<JsonObject> jsonList = gson.fromJson((Reader)reader, listType);
+            if (jsonList == null) {
                 throw new IllegalArgumentException("Config file is empty or invalid JSON format.");
             }
+            List<ReplaceRule> rules = parseRules(jsonList);
             validateRules(rules);
             return rules;
         } catch (IOException e) {
@@ -27,6 +32,32 @@ public class ConfigLoader {
         } catch (JsonSyntaxException e) {
             throw new IllegalArgumentException("Invalid JSON syntax in config file: " + configPath, e);
         }
+    }
+
+    private static List<ReplaceRule> parseRules(List<JsonObject> jsonList) {
+        List<ReplaceRule> rules = new java.util.ArrayList<>();
+        for (JsonObject json : jsonList) {
+            int row = json.has("row") ? json.get("row").getAsInt() : 0;
+            int col = json.has("col") ? json.get("col").getAsInt() : 0;
+            String regexPattern = json.has("regexPattern") ? json.get("regexPattern").getAsString() : null;
+            String format = json.has("format") ? json.get("format").getAsString() : null;
+            String sheet = json.has("sheet") ? json.get("sheet").getAsString() : null;
+            
+            Map<String, String> enumMap = null;
+            if (json.has("enumMap") && json.get("enumMap").isJsonObject()) {
+                enumMap = new HashMap<>();
+                JsonObject enumObj = json.get("enumMap").getAsJsonObject();
+                for (Map.Entry<String, com.google.gson.JsonElement> entry : enumObj.entrySet()) {
+                    enumMap.put(entry.getKey(), entry.getValue().getAsString());
+                }
+            }
+            
+            String timeRegex = json.has("timeRegex") ? json.get("timeRegex").getAsString() : null;
+            int timeOccurrence = json.has("timeOccurrence") ? json.get("timeOccurrence").getAsInt() : 1;
+            
+            rules.add(new ReplaceRule(row, col, regexPattern, format, sheet, enumMap, timeRegex, timeOccurrence));
+        }
+        return rules;
     }
 
     private static void validateRules(List<ReplaceRule> rules) {
