@@ -1,16 +1,15 @@
 package com.example.excelreplacer;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonArray;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.io.IOException;
-import java.io.Reader;
-import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,7 +21,7 @@ public class ConfigLoader {
         Gson gson = new Gson();
         Type listType = new TypeToken<List<JsonObject>>(){}.getType();
         try (InputStreamReader reader = new InputStreamReader(new FileInputStream(configPath), StandardCharsets.UTF_8)) {
-            List<JsonObject> jsonList = gson.fromJson((Reader)reader, listType);
+            List<JsonObject> jsonList = gson.fromJson((java.io.Reader)reader, listType);
             if (jsonList == null) {
                 throw new IllegalArgumentException("Config file is empty or invalid JSON format.");
             }
@@ -37,7 +36,7 @@ public class ConfigLoader {
     }
 
     private static List<ReplaceRule> parseRules(List<JsonObject> jsonList) {
-        List<ReplaceRule> rules = new java.util.ArrayList<>();
+        List<ReplaceRule> rules = new ArrayList<>();
         for (JsonObject json : jsonList) {
             int row = json.has("row") ? json.get("row").getAsInt() : 0;
             int col = json.has("col") ? json.get("col").getAsInt() : 0;
