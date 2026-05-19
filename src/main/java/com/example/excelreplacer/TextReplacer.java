@@ -46,9 +46,24 @@ public class TextReplacer {
 
     private String applyEnumMapping(String value, Map<String, String> enumMap) {
         if (value == null || value.isEmpty()) {
-            return value;
+            return "";
         }
-        return enumMap.getOrDefault(value, value);
+        
+        // 1. Exact match
+        if (enumMap.containsKey(value)) {
+            return enumMap.get(value);
+        }
+        
+        // 2. Fuzzy match (contains)
+        for (Map.Entry<String, String> entry : enumMap.entrySet()) {
+            String key = entry.getKey();
+            if (value.contains(key) || key.contains(value)) {
+                return entry.getValue();
+            }
+        }
+        
+        // 3. Return empty string if no match
+        return "";
     }
 
     private String extractTime(String cellStr, String timeSlotRegex, int occurrence) {
@@ -63,6 +78,7 @@ public class TextReplacer {
             return "00:00:00";
         }
         
+        // occurrence 1 means last one, 2 means 2nd last, etc.
         int idx = matches.size() - occurrence;
         if (idx < 0) idx = 0;
         

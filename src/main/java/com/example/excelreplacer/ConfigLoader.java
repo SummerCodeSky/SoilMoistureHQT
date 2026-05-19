@@ -5,7 +5,9 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
-import java.io.FileReader;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.io.IOException;
 import java.io.Reader;
 import java.lang.reflect.Type;
@@ -19,7 +21,7 @@ public class ConfigLoader {
     public static List<ReplaceRule> load(String configPath) {
         Gson gson = new Gson();
         Type listType = new TypeToken<List<JsonObject>>(){}.getType();
-        try (FileReader reader = new FileReader(configPath)) {
+        try (InputStreamReader reader = new InputStreamReader(new FileInputStream(configPath), StandardCharsets.UTF_8)) {
             List<JsonObject> jsonList = gson.fromJson((Reader)reader, listType);
             if (jsonList == null) {
                 throw new IllegalArgumentException("Config file is empty or invalid JSON format.");
