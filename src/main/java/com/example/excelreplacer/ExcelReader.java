@@ -60,7 +60,7 @@ implements AutoCloseable {
             maxRows = rowCount;
             bestSheet = sheet;
         }
-        return bestSheet != null ? bestSheet : this.workbook.getSheetAt(0);
+        System.out.println("Selected sheet: " + bestSheet.getSheetName()); return bestSheet != null ? bestSheet : this.workbook.getSheetAt(0);
     }
 
     public String getCellValue(int row, int col) {
