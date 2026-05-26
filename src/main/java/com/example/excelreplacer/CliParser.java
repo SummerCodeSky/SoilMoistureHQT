@@ -91,13 +91,16 @@ public class CliParser {
 
         if (batchMode) {
             if (excelPath == null) {
-                throw new IllegalArgumentException("Batch mode requires current directory with Excel files");
+                excelPath = "input";
             }
             if (textPath == null || configPath == null) {
                 throw new IllegalArgumentException("Batch mode requires --text and --config");
             }
             if (outputPath == null) {
                 outputPath = "output";
+            }
+            if (mergeOutputPath == null) {
+                mergeOutputPath = "output/Aresult.HQT";
             }
         } else {
             if (excelPath == null || textPath == null || configPath == null) {

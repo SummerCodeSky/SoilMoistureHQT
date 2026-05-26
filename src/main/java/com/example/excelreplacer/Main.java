@@ -73,7 +73,7 @@ public class Main {
     private static int runBatchMode(CliArgs cliArgs) throws IOException {
         File excelDir = new File(cliArgs.excelPath());
         if (!excelDir.exists() || !excelDir.isDirectory()) {
-            throw new IllegalArgumentException("Excel path must be a directory in batch mode: " + cliArgs.excelPath());
+            throw new IllegalArgumentException("Excel directory not found: " + cliArgs.excelPath());
         }
 
         File[] excelFiles = excelDir.listFiles((dir, name) -> name.endsWith(".xlsx") || name.endsWith(".xls"));
@@ -81,7 +81,7 @@ public class Main {
             throw new IllegalArgumentException("No Excel files found in directory: " + cliArgs.excelPath());
         }
 
-        System.out.println("Found " + excelFiles.length + " Excel file(s) in directory: " + cliArgs.excelPath());
+        System.out.println("Found " + excelFiles.length + " Excel file(s) in: " + cliArgs.excelPath());
 
         List<ReplaceRule> rules = ConfigLoader.load(cliArgs.configPath());
         String textContent = Files.readString(Path.of(cliArgs.textPath()));
@@ -98,14 +98,14 @@ public class Main {
             String baseName = getBaseName(excelFile.getName());
             String individualOutputPath = new File(outputDir, baseName + ".HQT").getPath();
 
-            System.out.println("Processing: " + excelFile.getName());
+            System.out.println("\n[" + excelFile.getName() + "]");
             
             try (ExcelReader reader = new ExcelReader(excelFile.getPath(), cliArgs.sheetName(), cliArgs.sheetIndex())) {
                 TextReplacer replacer = new TextReplacer();
                 String result = replacer.replace(textContent, rules, reader);
                 FileWriter.write(result, individualOutputPath);
                 
-                individualOutputs.add(result);
+                individualOutputs.add(individualOutputPath);
                 processedFiles.add(excelFile.getName());
                 
                 ReplaceReport report = replacer.getReport();
@@ -125,10 +125,15 @@ public class Main {
             System.out.println("\nMerging " + individualOutputs.size() + " output(s) into: " + cliArgs.mergeOutputPath());
             StringBuilder merged = new StringBuilder();
             for (int i = 0; i < individualOutputs.size(); i++) {
+                String content = Files.readString(Path.of(individualOutputs.get(i)));
+                // Remove BOM from individual files to avoid duplicate BOMs in merged file
+                if (content.length() > 0 && content.charAt(0) == '\uFEFF') {
+                    content = content.substring(1);
+                }
                 if (i > 0) {
                     merged.append("\n");
                 }
-                merged.append(individualOutputs.get(i));
+                merged.append(content);
             }
             FileWriter.write(merged.toString(), cliArgs.mergeOutputPath());
             System.out.println("Merge complete!");

@@ -8,7 +8,6 @@ import java.util.regex.Pattern;
 
 public class TextReplacer {
     private final List<ReplaceDetail> details;
-    // 匹配模式: ^((?:[^,]*,){N})[^,]+ 提取N
     private static final Pattern INDEX_PATTERN = Pattern.compile("^\\(\\?:\\[\\^,\\]\\*,\\)\\{(\\d+)\\}");
 
     public TextReplacer() {
@@ -16,11 +15,11 @@ public class TextReplacer {
     }
 
     public String replace(String textContent, List<ReplaceRule> rules, ExcelReader reader) {
-        String[] lines = textContent.split("\n", -1);
+        String cleanContent = textContent.replace("\r", "");
+        String[] lines = cleanContent.split("\n", -1);
         StringBuilder result = new StringBuilder();
         
         for (int lineIdx = 0; lineIdx < lines.length; lineIdx++) {
-            System.out.println("[LINE] " + lineIdx + " head=" + lines[lineIdx].substring(0, Math.min(50, lines[lineIdx].length())));
             String line = lines[lineIdx];
             String replacedLine = processLine(lineIdx, line, rules, reader);
             result.append(replacedLine);
@@ -32,34 +31,25 @@ public class TextReplacer {
         return result.toString();
     }
     
-    private boolean isRuleForLine(int lineIdx, int ruleRow) {
-        // 模板行索引到 Excel 行范围的映射
-        // Line 1: 石泉 (Shiquan) -> row 1-18
-        // Line 2: 马池 (Machi) -> row 21-37
-        // Line 3: 恒口 (Hengkou) -> row 58-75
-        // Line 4: 长枪铺 (Changqiangpu) -> row 39-56
-        if (lineIdx == 0) return ruleRow >= 1 && ruleRow <= 18;
-        if (lineIdx == 1) return ruleRow >= 21 && ruleRow <= 37;
-        if (lineIdx == 2) return ruleRow >= 58 && ruleRow <= 75;
-        if (lineIdx == 3) return ruleRow >= 39 && ruleRow <= 56;
-        return false;
+    private int getLineOffset(int lineIdx) {
+        return lineIdx * 192;
     }
-    
+
     private String processLine(int lineIdx, String line, List<ReplaceRule> rules, ExcelReader reader) {
-        // 将行按逗号分割
         String[] fields = line.split(",", -1);
         boolean modified = false;
+        int lineOffset = getLineOffset(lineIdx);
+        int nextLineOffset = lineOffset + 192;
         
         for (ReplaceRule rule : rules) {
-            if (!isRuleForLine(lineIdx, rule.row())) {
-                // continue; // DEBUG
-            } else {
-                System.out.println("[DEBUG] LineIdx " + lineIdx + " matches rule row " + rule.row() + " (idx " + extractFieldIndex(rule.regexPattern()) + ")");
+            int configIndex = extractFieldIndex(rule.regexPattern());
+            
+            if (configIndex < lineOffset || configIndex >= nextLineOffset) {
+                continue;
             }
             
             Object cellValue = reader.getCellValue(rule.row(), rule.col());
             String valStr = (cellValue == null) ? "NULL" : cellValue.toString().trim();
-            if (lineIdx == 1 && rule.row() == 21) System.out.println("[DEBUG] LineIdx 1 rule 21 val=[" + valStr + "]");
             if (cellValue == null || valStr.isEmpty()) {
                 continue;
             }
@@ -69,6 +59,14 @@ public class TextReplacer {
             
             if (rule.enumMap() != null && !rule.enumMap().isEmpty()) {
                 replacement = applyEnumMapping(cellStr, rule.enumMap());
+                
+                // 特殊规则：主要作物 (142, 334, 526, 718) 匹配失败时默认为 "d" (其他)
+                if (replacement.isEmpty()) {
+                    int currentFieldIndex = extractFieldIndex(rule.regexPattern());
+                    if (currentFieldIndex == 142 || currentFieldIndex == 334 || currentFieldIndex == 526 || currentFieldIndex == 718) {
+                        replacement = "d";
+                    }
+                }
             } else if ("time".equalsIgnoreCase(rule.format())) {
                 replacement = extractTime(cellStr, rule.timeRegex(), rule.timeOccurrence());
             } else if ("YYYY-MM-DD".equalsIgnoreCase(rule.format())) {
@@ -77,39 +75,32 @@ public class TextReplacer {
                 replacement = extractTimeOnly(cellStr);
             }
             
-            // 从正则中提取字段索引
-            int fieldIndex = extractFieldIndex(rule.regexPattern());
-            if (fieldIndex >= 0) {
-                // 如果索引超出当前字段数组长度，扩展数组
-                if (fieldIndex >= fields.length) {
-                    String[] newFields = new String[fieldIndex + 1];
-                    System.arraycopy(fields, 0, newFields, 0, fields.length);
-                    for (int i = fields.length; i <= fieldIndex; i++) {
-                        newFields[i] = "";
-                    }
-                    fields = newFields;
+            int fieldIndex = configIndex - lineOffset;
+            
+            if (fieldIndex >= fields.length) {
+                String[] newFields = new String[fieldIndex + 1];
+                System.arraycopy(fields, 0, newFields, 0, fields.length);
+                for (int i = fields.length; i <= fieldIndex; i++) {
+                    newFields[i] = "";
                 }
-                
-                String oldValue = fields[fieldIndex];
-                if (!oldValue.equals(replacement)) {
-                    fields[fieldIndex] = replacement;
-                    modified = true;
-                    details.add(new ReplaceDetail(rule.regexPattern(), oldValue, replacement, fieldIndex));
-                }
+                fields = newFields;
+            }
+            
+            String oldValue = fields[fieldIndex];
+            if (!oldValue.equals(replacement)) {
+                fields[fieldIndex] = replacement;
+                modified = true;
+                details.add(new ReplaceDetail(rule.regexPattern(), oldValue, replacement, fieldIndex));
             }
         }
         
         if (modified) {
-            String res = String.join(",", fields);
-            System.out.println("[OUT] LineIdx " + lineIdx + " len=" + res.length() + " head=" + res.substring(0, Math.min(50, res.length())));
-            return res;
+            return String.join(",", fields);
         }
         return line;
     }
     
-    // 从正则 ^((?:[^,]*,){N})[^,]+ 中提取 N（即要替换的字段索引）
     private int extractFieldIndex(String regexPattern) {
-        // 匹配 {数字}
         Pattern p = Pattern.compile("\\{(\\d+)\\}");
         Matcher m = p.matcher(regexPattern);
         if (m.find()) {
@@ -119,25 +110,8 @@ public class TextReplacer {
     }
 
     private String applyEnumMapping(String value, Map<String, String> enumMap) {
-        if (value == null || value.isEmpty()) {
-            return "";
-        }
-        
-        // 1. Exact match
-        if (enumMap.containsKey(value)) {
-            return enumMap.get(value);
-        }
-        
-        // 2. Fuzzy match (contains)
-        for (Map.Entry<String, String> entry : enumMap.entrySet()) {
-            String key = entry.getKey();
-            if (value.contains(key) || key.contains(value)) {
-                return entry.getValue();
-            }
-        }
-        
-        // 3. Return empty string if no match
-        return "";
+        if (value == null) return "";
+        return FuzzyMatcher.match(value, enumMap);
     }
 
     private String extractDate(String cellStr) {
@@ -153,13 +127,32 @@ public class TextReplacer {
     }
 
     private String extractTimeOnly(String cellStr) {
+        int hongganIdx = cellStr.indexOf("烘干");
+        String samplePart = hongganIdx >= 0 ? cellStr.substring(0, hongganIdx) : cellStr;
+        
+        Pattern pColon = Pattern.compile("(\\d{1,2})[：:](\\d{1,2})");
+        Matcher mColon = pColon.matcher(samplePart);
+        if (mColon.find()) {
+            int hour = Integer.parseInt(mColon.group(1));
+            int minute = Integer.parseInt(mColon.group(2));
+            return String.format("%02d:%02d:00", hour, minute);
+        }
+        
         Pattern p = Pattern.compile("(\\d{1,2})\\s*时\\s*(\\d{1,2})\\s*分");
-        Matcher m = p.matcher(cellStr);
+        Matcher m = p.matcher(samplePart);
         if (m.find()) {
             int hour = Integer.parseInt(m.group(1));
             int minute = Integer.parseInt(m.group(2));
             return String.format("%02d:%02d:00", hour, minute);
         }
+        
+        Pattern pHourOnly = Pattern.compile("(\\d{1,2})\\s*时");
+        Matcher mHour = pHourOnly.matcher(samplePart);
+        if (mHour.find()) {
+            int hour = Integer.parseInt(mHour.group(1));
+            return String.format("%02d:00:00", hour);
+        }
+        
         return "00:00:00";
     }
 
@@ -175,7 +168,6 @@ public class TextReplacer {
             return "00:00:00";
         }
         
-        // occurrence 1 means last one, 2 means 2nd last, etc.
         int idx = matches.size() - occurrence;
         if (idx < 0) idx = 0;
         

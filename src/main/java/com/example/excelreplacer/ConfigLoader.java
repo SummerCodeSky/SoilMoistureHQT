@@ -41,9 +41,9 @@ public class ConfigLoader {
         for (JsonObject json : jsonList) {
             int row = json.has("row") ? json.get("row").getAsInt() : 0;
             int col = json.has("col") ? json.get("col").getAsInt() : 0;
-            String regexPattern = json.has("regexPattern") ? json.get("regexPattern").getAsString() : null;
-            String format = json.has("format") ? json.get("format").getAsString() : null;
-            String sheet = json.has("sheet") ? json.get("sheet").getAsString() : null;
+            String regexPattern = json.has("regexPattern") && !json.get("regexPattern").isJsonNull() ? json.get("regexPattern").getAsString() : null;
+            String format = json.has("format") && !json.get("format").isJsonNull() ? json.get("format").getAsString() : null;
+            String sheet = json.has("sheet") && !json.get("sheet").isJsonNull() ? json.get("sheet").getAsString() : null;
             
             Map<String, String> enumMap = null;
             if (json.has("enumMap") && json.get("enumMap").isJsonObject()) {
@@ -54,7 +54,7 @@ public class ConfigLoader {
                 }
             }
             
-            String timeRegex = json.has("timeRegex") ? json.get("timeRegex").getAsString() : null;
+            String timeRegex = json.has("timeRegex") && !json.get("timeRegex").isJsonNull() ? json.get("timeRegex").getAsString() : null;
             int timeOccurrence = json.has("timeOccurrence") ? json.get("timeOccurrence").getAsInt() : 1;
             
             rules.add(new ReplaceRule(row, col, regexPattern, format, sheet, enumMap, timeRegex, timeOccurrence));

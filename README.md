@@ -1,53 +1,100 @@
 # 土壤墒情批量处理工具
 
-Windows 环境下的 Excel 批量处理工具，自动从 Excel 读取数据并生成 HQT 文件。
+跨平台（Windows/Linux/macOS）的 Excel 批量处理工具，自动从 Excel 读取数据并生成 HQT 文件。
 
 ---
 
 ## 快速开始
 
-### 1. 准备文件
+### 方式一：使用预编译版本（推荐）
 
-将以下文件放在同一目录：
+#### Windows 用户
 
-- `run.bat` - 运行脚本
-- `soil-moisture-hqt-1.0.0.jar` - 程序文件
-- `template.txt` - 文本模板
-- `config.json` - 替换规则配置
+1. **准备文件**：确保以下文件在同一目录
+   - `run.bat` - 运行脚本
+   - `build.bat` - 构建脚本（如需从源码构建）
+   - `soil-moisture-hqt-1.0.0.jar` - 程序文件
+   - `template.txt` - 文本模板
+   - `config.json` - 替换规则配置
 
-### 2. 放入 Excel 文件
+2. **放入 Excel 文件**：创建 `input/` 文件夹，放入需要处理的 Excel 文件
+   ```
+   工具目录/
+   ├── run.bat
+   ├── soil-moisture-hqt-1.0.0.jar
+   ├── template.txt
+   ├── config.json
+   └── input/
+       ├── 2026.4.20 墒情.xlsx
+       ├── 2026.4.30 墒情.xlsx
+       └── 2026.5.10 墒情.xlsx
+   ```
 
-创建 `input/` 文件夹，放入需要处理的 Excel 文件：
+3. **运行处理**：双击 **`run.bat`**
 
-```
-工具目录/
-├── run.bat
-├── soil-moisture-hqt-1.0.0.jar
-├── template.txt
-├── config.json
-└── input/
-    ├── 2026.4.20 墒情.xlsx
-    ├── 2026.4.30 墒情.xlsx
-    └── 2026.5.10 墒情.xlsx
-```
+#### Linux/macOS 用户
 
-### 3. 运行处理
+1. **赋予执行权限**
+   ```bash
+   chmod +x run.sh build.sh
+   ```
 
-双击 **`run.bat`**
+2. **放入 Excel 文件**：创建 `input/` 文件夹，放入需要处理的 Excel 文件
 
-处理完成后自动生成：
-- `output/` - 独立的 HQT 文件（每个 Excel 对应一个）
-- `merged.HQT` - 合并所有输出（空行分隔）
+3. **运行处理**
+   ```bash
+   ./run.sh
+   ```
+
+### 方式二：从源码构建
+
+#### Windows 系统
+
+1. 安装 JDK 17+ 和 Maven
+   - JDK: https://adoptium.net/temurin/releases/?version=17
+   - Maven: https://maven.apache.org/download.cgi
+
+2. 双击运行 **`build.bat`**
+
+3. 构建完成后，双击 **`run.bat`** 运行
+
+#### Linux/macOS 系统
+
+1. 安装 JDK 17+ 和 Maven
+   ```bash
+   # macOS
+   brew install openjdk@17 maven
+
+   # Ubuntu/Debian
+   sudo apt install openjdk-17-jdk maven
+
+   # CentOS/RHEL
+   sudo yum install java-17-openjdk maven
+   ```
+
+2. 运行构建脚本
+   ```bash
+   chmod +x build.sh
+   ./build.sh
+   ```
+
+3. 运行程序
+   ```bash
+   ./run.sh
+   ```
 
 ---
 
 ## 环境要求
 
-- **Windows** 7/10/11
-- **JDK 17+**：https://adoptium.net/temurin/releases/?version=17
+| 平台 | 要求 |
+|------|------|
+| **Windows** | Windows 7/10/11，JDK 17+ |
+| **Linux** | JDK 17+，glibc 2.17+ |
+| **macOS** | macOS 10.15+，JDK 17+ |
 
 检查 Java 是否安装：
-```batch
+```bash
 java -version
 ```
 
@@ -102,7 +149,7 @@ output/
 └── 2026.5.10 墒情.HQT
 ```
 
-### merged.HQT
+### Aresult.HQT
 
 所有输出合并为一个文件，文件之间用空行分隔：
 
@@ -122,12 +169,13 @@ output/
 
 ### Q: 双击 run.bat 后闪退
 
-**原因**：缺少必要文件
+**原因**：缺少必要文件或 Java 环境
 
 **解决**：
 1. 确保 `soil-moisture-hqt-1.0.0.jar` 存在
 2. 确保 `template.txt` 和 `config.json` 存在
 3. 确保 `input/` 目录有 Excel 文件
+4. 命令行运行 `run.bat` 查看详细错误信息
 
 ### Q: 提示找不到 Java
 
@@ -136,18 +184,33 @@ output/
 2. 安装后重启命令行
 3. 运行 `java -version` 验证
 
+### Q: 运行 ./run.sh 提示权限不足
+
+**解决**：
+```bash
+chmod +x run.sh
+./run.sh
+```
+
+### Q: 构建时提示找不到 Maven
+
+**解决**：
+- Windows: 下载 Maven 并配置 PATH 环境变量
+- Linux: `sudo apt install maven` 或 `sudo yum install maven`
+- macOS: `brew install maven`
+
 ### Q: 输出结果为空
 
 **检查**：
 1. Excel 文件是否有数据
 2. `config.json` 的行号列号是否正确
-3. 查看 run.bat 运行的错误信息
+3. 查看运行时的错误信息
 
 ### Q: 中文乱码
 
 **解决**：
 1. 使用 UTF-8 编码保存 `template.txt` 和 `config.json`
-2. Windows 系统区域设置使用 UTF-8
+2. Windows 系统区域设置使用 UTF-8（设置 → 时间和语言 → 语言 → 管理语言设置 → 更改系统区域设置 → 勾选 Beta 版 UTF-8）
 
 ---
 
@@ -155,7 +218,7 @@ output/
 
 如需自定义处理，可使用命令行：
 
-```batch
+```bash
 java -jar soil-moisture-hqt-1.0.0.jar [参数]
 
 参数:
@@ -169,8 +232,8 @@ java -jar soil-moisture-hqt-1.0.0.jar [参数]
 ```
 
 示例：
-```batch
-java -jar soil-moisture-hqt-1.0.0.jar -b -e input -t template.txt -c config.json -o output -m merged.HQT --sheet-index 2
+```bash
+java -jar soil-moisture-hqt-1.0.0.jar -b -e input -t template.txt -c config.json -o output -m Aresult.HQT --sheet-index 2
 ```
 
 ---
@@ -179,18 +242,24 @@ java -jar soil-moisture-hqt-1.0.0.jar -b -e input -t template.txt -c config.json
 
 ```
 SoilMoistureHQT/
-├── run.bat                          # 运行脚本
-├── soil-moisture-hqt-1.0.0.jar      # 程序文件
+├── run.bat                          # Windows 运行脚本
+├── run.sh                           # Linux/macOS 运行脚本
+├── build.bat                        # Windows 构建脚本
+├── build.sh                         # Linux/macOS 构建脚本
+├── soil-moisture-hqt-1.0.0.jar      # 程序文件（构建后生成）
 ├── template.txt                     # 文本模板
 ├── config.json                      # 替换规则
+├── pom.xml                          # Maven 构建配置
 ├── input/                           # 放入 Excel 文件
 ├── output/                          # 输出目录
-├── merged.HQT                       # 合并文件
+├── Aresult.HQT                      # 合并文件
 └── src/
     └── main/
-        ├── java/                    # Java 源代码
-        └── resources/               # 资源文件
+        └── java/                    # Java 源代码
 ```
 
 ---
 
+## 许可证
+
+本项目仅供学习和内部使用。
